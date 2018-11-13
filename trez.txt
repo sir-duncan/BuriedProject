@@ -1,0 +1,83 @@
+#include <Stepper.h>
+#include <IRremote.h>
+#include <LiquidCrystal.h>
+
+
+
+
+
+#define STEPS 200
+
+const int RECV_PIN = 0;
+int i = 0, cli = 0, previous = 0, motor_speed = 60, depm = 0;
+int PinR = 3;
+int PinG = 5;
+int PinB = 6;
+int valR;
+int valG;
+int valB;
+
+
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+Stepper stepper(STEPS, 10, 11, 12, 13);
+LiquidCrystal lcd(1, 2, 4, 7, 8 , 9);
+
+void setup()
+{
+  Serial.begin(9600);
+  stepper.setSpeed(50);
+
+  irrecv.enableIRIn();
+
+  lcd.begin(16, 2);
+  lcd.setCursor(0,1);
+
+  pinMode(PinR,OUTPUT);
+  pinMode(PinG,OUTPUT);
+  pinMode(PinB,OUTPUT);
+}
+
+void loop()
+{
+  int val = analogRead(0);
+
+  valR = 255;
+  valG = 255;
+  valB = 255;
+
+  Couleur(valR,valG,valB);
+  
+  stepper.step(motor_speed);
+  
+  if (irrecv.decode(&results)){
+      Serial.print("Key pressed : ");
+      Serial.println(results.value);
+      irrecv.resume();
+
+      //if(results.value == 4294967295) motor_speed += depm;
+
+      if(results.value == 16582903){
+          motor_speed += 20, depm = 20;
+          Serial.println("Acceleration"); /// 1
+      }
+      if(results.value == 16615543) cli++;//Serial.println("2"); /// 2
+      if(results.value == 16599223){
+          motor_speed -= 20, depm = -20;
+          Serial.println("Deceleration"); /// 3
+      }
+      if(results.value == 16591063) Serial.println(motor_speed); /// 4
+      if(results.value == 16623703) Serial.println("5");
+      if(results.value == 16607383) Serial.println("6");
+      if(results.value == 16586983) Serial.println("7");
+      if(results.value == 16619623) Serial.println("8");
+      if(results.value == 16603303) Serial.println("9");
+  }
+}
+
+void Couleur(int rouge, int vert, int bleu) 
+{
+  analogWrite(PinR, rouge);
+  analogWrite(PinG, vert);
+  analogWrite(PinB, bleu);
+}
